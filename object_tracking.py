@@ -1,3 +1,25 @@
+# coding: utf-8
+# =====================================================================
+#  Filename:    object_tracking.py
+#
+#  py Ver:      python 3.6 or later
+#
+#  Description: Detects objects & tracks them through a video feed or the web-cam. Uses a pre-trained detection model.
+#
+#  Usage: python object_tracking.py --prototxt model\MobileNetSSD_deploy.prototxt \
+#         --model model\MobileNetSSD_deploy.caffemodel --label person
+#         or
+#        python object_tracking.py --prototxt model\MobileNetSSD_deploy.prototxt \
+#        --model model\MobileNetSSD_deploy.caffemodel --label person --out output.avi
+#         or
+#        python object_tracking.py --prototxt model\MobileNetSSD_deploy.prototxt \
+#        --model model\MobileNetSSD_deploy.caffemodel --video test.mp4 --label person --out output.avi
+#
+#  Note: Requires opencv 3.4.2 or later
+#
+#  Author: Ankit Saxena (ankch24@gmail.com)
+# =====================================================================
+
 import numpy as np
 import argparse
 import imutils
