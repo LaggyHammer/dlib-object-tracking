@@ -3,6 +3,7 @@ import argparse
 import imutils
 import cv2
 import dlib
+import time
 from imutils.video import FPS
 
 
@@ -25,23 +26,76 @@ def get_arguments():
     return arguments
 
 
-if __name__ == '__main__':
-    args = get_arguments()
+def create_videowriter(file_name, fps, size):
+    """
+    Creates a video writer object to save the video feed module results
+    :param file_name: file to save the video in
+    :param fps: frames per second for the video
+    :param size: size/resolution of the video feed
+    :return: video writer object to write to
+    """
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    out = cv2.VideoWriter(file_name, fourcc, fps, size, True)
 
-    CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
-               "bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
-               "dog", "horse", "motorbike", "person", "pottedplant", "sheep",
-               "sofa", "train", "tvmonitor"]
+    return out
+
+
+def forward_passer(net, image, timing=True):
+    """
+    Returns results from a single pass on a Deep Neural Net for a given list of layers
+    :param net: Deep Neural Net (usually a pre-loaded .pb file)
+    :param image: image to do the pass on
+    :param timing: show detection time or not
+    :return: results obtained from the forward pass
+    """
+    h, w = image.shape[:2]
+    blob = cv2.dnn.blobFromImage(image, 0.007843, (w, h), 127.5)
+    start = time.time()
+    net.setInput(blob)
+    scores = net.forward()
+    end = time.time()
+
+    if timing:
+        print(f"[INFO] detection in {round(end - start, 2)} seconds")
+
+    return scores
+
+
+def create_tracker(detections, width, height, best_detect, frame):
+    box = detections[0, 0, best_detect, 3:7] * np.array([width, height, width, height])
+    start_x, start_y, end_x, end_y = box.astype('int')
+
+    tracker = dlib.correlation_tracker()
+    rectangle = dlib.rectangle(start_x, start_y, end_x, end_y)
+    tracker.start_track(frame, rectangle)
+
+    return tracker, box.astype('int')
+
+
+def update_tracker(tracker, frame):
+    tracker.update(frame)
+    position = tracker.get_position()
+
+    start_x = int(position.left())
+    start_y = int(position.top())
+    end_x = int(position.right())
+    end_y = int(position.bottom())
+
+    return start_x, start_y, end_x, end_y
+
+
+def main(classes, proto, model, video, label_input, output, min_confidence):
 
     print("[INFO] loading detection model...")
-    net = cv2.dnn.readNetFromCaffe(args['prototxt'], args['model'])
+    net = cv2.dnn.readNetFromCaffe(prototxt=proto, caffeModel=model)
 
     print('[INFO] Starting video stream...')
-    if not args.get('video', False):
+    if not video:
         vs = cv2.VideoCapture(0)
 
     else:
         vs = cv2.VideoCapture(args['video'])
+
     tracker = None
     writer = None
     label = ""
@@ -57,51 +111,36 @@ if __name__ == '__main__':
         frame = imutils.resize(frame, width=600)
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        if args['output'] is not None and writer is None:
+        if output is not None and writer is None:
 
-            fourcc = cv2.VideoWriter_fourcc(*'XVID')
-            writer = cv2.VideoWriter(args['output'], fourcc, 30,
-                                     (frame.shape[1], frame.shape[0]), True)
+            writer = create_videowriter(output, 30, (frame.shape[1], frame.shape[0]))
 
         if tracker is None:
 
             height, width = frame.shape[:2]
-            blob = cv2.dnn.blobFromImage(frame, 0.007843, (width, height), 127.5)
-
-            net.setInput(blob)
-            detections = net.forward()
+            detections = forward_passer(net, frame, timing=False)
 
             if len(detections) > 0:
 
                 i = np.argmax(detections[0, 0, :, 2])
 
-                conf = detections[0, 0, i, 2]
-                label = CLASSES[int(detections[0, 0, i, 1])]
+                confidence = detections[0, 0, i, 2]
+                label = classes[int(detections[0, 0, i, 1])]
 
-                if conf > args["min_confidence"] and label == args["label"]:
+                if confidence > min_confidence and label == label_input:
 
-                    box = detections[0, 0, i, 3:7] * np.array([width, height, width, height])
-                    start_x, start_y, end_x, end_y = box.astype('int')
+                    tracker, points = create_tracker(detections, width, height, best_detect=i, frame=rgb)
 
-                    tracker = dlib.correlation_tracker()
-                    rectangle = dlib.rectangle(start_x, start_y, end_x, end_y)
-                    tracker.start_track(rgb, rectangle)
-
-                    cv2.rectangle(frame, (start_x, start_y), (end_x, end_y), (0, 255, 0), 2)
-                    cv2.putText(frame, label, (start_x, start_y - 15),
+                    cv2.rectangle(frame, (points[0], points[1]), (points[2], points[3]), (0, 255, 0), 2)
+                    cv2.putText(frame, label, (points[0], points[1] - 15),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 255, 0), 2)
 
         else:
-            tracker.update(rgb)
-            position = tracker.get_position()
 
-            start_x = int(position.left())
-            start_y = int(position.top())
-            end_x = int(position.right())
-            end_y = int(position.bottom())
+            points = update_tracker(tracker, rgb)
 
-            cv2.rectangle(frame, (start_x, start_y), (end_x, end_y), (0, 255, 0), 2)
-            cv2.putText(frame, label, (start_x, start_y - 15),
+            cv2.rectangle(frame, (points[0], points[1]), (points[2], points[3]), (0, 255, 0), 2)
+            cv2.putText(frame, label, (points[0], points[1] - 15),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 255, 0), 2)
 
         if writer is not None:
@@ -124,3 +163,15 @@ if __name__ == '__main__':
 
     cv2.destroyAllWindows()
     vs.release()
+
+
+if __name__ == '__main__':
+    args = get_arguments()
+
+    CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
+               "bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
+               "dog", "horse", "motorbike", "person", "pottedplant", "sheep",
+               "sofa", "train", "tvmonitor"]
+
+    main(classes=CLASSES, proto=args['prototxt'], model=args['model'], video=args.get('video', False),
+         label_input=args['label'], output=args.get('output', None), min_confidence=args['min_confidence'])
