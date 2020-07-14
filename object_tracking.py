@@ -37,7 +37,11 @@ if __name__ == '__main__':
     net = cv2.dnn.readNetFromCaffe(args['prototxt'], args['model'])
 
     print('[INFO] Starting video stream...')
-    vs = cv2.VideoCapture(args['video'])
+    if not args.get('video', False):
+        vs = cv2.VideoCapture(0)
+
+    else:
+        vs = cv2.VideoCapture(args['video'])
     tracker = None
     writer = None
     label = ""
