@@ -1,18 +1,18 @@
 # coding: utf-8
 # =====================================================================
-#  Filename:    object_tracking.py
+#  Filename:    single_object_tracking.py
 #
 #  py Ver:      python 3.6 or later
 #
 #  Description: Detects objects & tracks them through a video feed or the web-cam. Uses a pre-trained detection model.
 #
-#  Usage: python object_tracking.py --prototxt model\MobileNetSSD_deploy.prototxt \
+#  Usage: python single_object_tracking.py --prototxt model\MobileNetSSD_deploy.prototxt \
 #         --model model\MobileNetSSD_deploy.caffemodel --label person
 #         or
-#        python object_tracking.py --prototxt model\MobileNetSSD_deploy.prototxt \
+#        python single_object_tracking.py --prototxt model\MobileNetSSD_deploy.prototxt \
 #        --model model\MobileNetSSD_deploy.caffemodel --label person --out output.avi
 #         or
-#        python object_tracking.py --prototxt model\MobileNetSSD_deploy.prototxt \
+#        python single_object_tracking.py --prototxt model\MobileNetSSD_deploy.prototxt \
 #        --model model\MobileNetSSD_deploy.caffemodel --video test.mp4 --label person --out output.avi
 #
 #  Note: Requires opencv 3.4.2 or later
@@ -27,6 +27,7 @@ import cv2
 import dlib
 import time
 from imutils.video import FPS
+from utils import update_tracker, create_videowriter, forward_passer
 
 
 def get_arguments():
@@ -46,41 +47,6 @@ def get_arguments():
     arguments = vars(ap.parse_args())
 
     return arguments
-
-
-def create_videowriter(file_name, fps, size):
-    """
-    Creates a video writer object to save the video feed module results
-    :param file_name: file to save the video in
-    :param fps: frames per second for the video
-    :param size: size/resolution of the video feed
-    :return: video writer object to write to
-    """
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter(file_name, fourcc, fps, size, True)
-
-    return out
-
-
-def forward_passer(net, image, timing=True):
-    """
-    Returns results from a single pass on a Deep Neural Net for a given list of layers
-    :param net: Deep Neural Net
-    :param image: image to do the pass on
-    :param timing: show detection time or not
-    :return: results obtained from the forward pass
-    """
-    h, w = image.shape[:2]
-    blob = cv2.dnn.blobFromImage(image, 0.007843, (w, h), 127.5)
-    start = time.time()
-    net.setInput(blob)
-    scores = net.forward()
-    end = time.time()
-
-    if timing:
-        print(f"[INFO] detection in {round(end - start, 2)} seconds")
-
-    return scores
 
 
 def create_tracker(detections, width, height, best_detect, frame):
@@ -103,24 +69,6 @@ def create_tracker(detections, width, height, best_detect, frame):
     return tracker, box.astype('int')
 
 
-def update_tracker(tracker, frame):
-    """
-    Update the correlation tracker every iteration of the loop
-    :param tracker: tracker to be updated
-    :param frame: frame to update the tracker on
-    :return: updated tracker box
-    """
-    tracker.update(frame)
-    position = tracker.get_position()
-
-    start_x = int(position.left())
-    start_y = int(position.top())
-    end_x = int(position.right())
-    end_y = int(position.bottom())
-
-    return start_x, start_y, end_x, end_y
-
-
 def main(classes, proto, model, video, label_input, output, min_confidence):
 
     # pre-load detection model
@@ -134,7 +82,7 @@ def main(classes, proto, model, video, label_input, output, min_confidence):
 
     else:
         # start video stream
-        vs = cv2.VideoCapture(args['video'])
+        vs = cv2.VideoCapture(video)
 
     # initializing variables
     tracker = None

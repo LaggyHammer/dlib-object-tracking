@@ -9,7 +9,7 @@ A tracker is subsequently placed on the video stream and is updated every frame 
 
 ## Usage
 ```commandline
-python object_tracking.py --prototxt model\MobileNetSSD_deploy.prototxt --model model\MobileNetSSD_deploy.caffemodel --label person
-python object_tracking.py --prototxt model\MobileNetSSD_deploy.prototxt --model model\MobileNetSSD_deploy.caffemodel --label person --out output.avi
-python object_tracking.py --prototxt model\MobileNetSSD_deploy.prototxt --model model\MobileNetSSD_deploy.caffemodel --video test.mp4 --label person --out output.avi
+python single_object_tracking.py --prototxt model\MobileNetSSD_deploy.prototxt --model model\MobileNetSSD_deploy.caffemodel --label person
+python single_object_tracking.py --prototxt model\MobileNetSSD_deploy.prototxt --model model\MobileNetSSD_deploy.caffemodel --label person --out output.avi
+python single_object_tracking.py --prototxt model\MobileNetSSD_deploy.prototxt --model model\MobileNetSSD_deploy.caffemodel --video test.mp4 --label person --out output.avi
 ```
