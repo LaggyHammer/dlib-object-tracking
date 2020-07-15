@@ -1,3 +1,6 @@
+# ToDo : add file description
+# ToDo : add more comments
+
 import numpy as np
 import argparse
 import imutils
