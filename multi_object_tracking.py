@@ -1,5 +1,24 @@
-# ToDo : add file description
-# ToDo : add more comments
+# coding: utf-8
+# =====================================================================
+#  Filename:    multi_object_tracking.py
+#
+#  py Ver:      python 3.6 or later
+#
+#  Description: Detects objects & tracks them through a video feed or the web-cam. Uses a pre-trained detection model.
+#
+#  Usage: python multi_object_tracking.py --prototxt model\MobileNetSSD_deploy.prototxt \
+#         --model model\MobileNetSSD_deploy.caffemodel --label person
+#         or
+#        python multi_object_tracking.py --prototxt model\MobileNetSSD_deploy.prototxt \
+#        --model model\MobileNetSSD_deploy.caffemodel --label person --out output.avi
+#         or
+#        python multi_object_tracking.py --prototxt model\MobileNetSSD_deploy.prototxt \
+#        --model model\MobileNetSSD_deploy.caffemodel --video test.mp4 --label person --out output.avi
+#
+#  Note: Requires opencv 3.4.2 or later
+#
+#  Author: Ankit Saxena (ankch24@gmail.com)
+# =====================================================================
 
 import numpy as np
 import argparse
@@ -31,17 +50,26 @@ def get_arguments():
 
 
 def start_tracker(box, label, frame, in_queue, out_queue):
+    """
+    Starts a tracker and then continuously pushes its updates to a queue
+    :param box: detection box to be tracked
+    :param label: label for the detection
+    :param frame: frame to place the detector on
+    :param in_queue: incoming queue of frames
+    :param out_queue: queue to push the labelled trackers on
+    """
 
+    # initiate tracker
     tracker = dlib.correlation_tracker()
     rectangle = dlib.rectangle(box[0], box[1], box[2], box[3])
     tracker.start_track(frame, rectangle)
 
     while True:
-
+        # get frame
         frame = in_queue.get()
 
         if frame is not None:
-
+            # push the tracker after updating it
             out_queue.put((label, update_tracker(tracker, frame)))
 
 
@@ -84,10 +112,13 @@ def main(classes, proto, model, video, label_input, output, min_confidence):
             # initialize output file writer
             writer = create_videowriter(output, 30, (frame.shape[1], frame.shape[0]))
 
+        # if no item in the input queue
         if len(in_queues) == 0:
             height, width = frame.shape[:2]
+            # get detections from the model
             detections = forward_passer(net, frame, timing=False)
 
+            # loop through all detections
             for i in np.arange(0, detections.shape[2]):
 
                 confidence = detections[0, 0, i, 2]
@@ -102,28 +133,35 @@ def main(classes, proto, model, video, label_input, output, min_confidence):
                     box = detections[0, 0, i, 3:7] * np.array([width, height, width, height])
                     bound_box = box.astype('int')
 
+                    # initiate multiprocessing queues
                     in_q = multiprocessing.Queue()
                     out_q = multiprocessing.Queue()
                     in_queues.append(in_q)
                     out_queues.append(out_q)
 
+                    # initiating daemon process
                     p = multiprocessing.Process(target=start_tracker,
                                                 args=(bound_box, label, rgb, in_q, out_q))
                     p.daemon = True
                     p.start()
 
+                    # draw rectangles around the tracked detections
                     cv2.rectangle(frame, (bound_box[0], bound_box[1]), (bound_box[2], bound_box[3]), (0, 255, 0), 2)
                     cv2.putText(frame, label, (bound_box[0], bound_box[1] - 15), cv2.FONT_HERSHEY_SIMPLEX,
                                 0.45, (0, 255, 0), 2)
 
+        # if detections already identified
         else:
 
+            # push frames
             for in_q in in_queues:
                 in_q.put(rgb)
 
+            # get labelled boxes
             for out_q in out_queues:
                 label, label_box = out_q.get()
 
+                # draw rectangles around the tracked detections
                 cv2.rectangle(frame, (label_box[0], label_box[1]), (label_box[2], label_box[3]),
                               (0, 255, 0), 2)
                 cv2.putText(frame, label, (label_box[0], label_box[1] - 15), cv2.FONT_HERSHEY_SIMPLEX,
