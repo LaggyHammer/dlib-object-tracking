@@ -1,3 +1,16 @@
+# coding: utf-8
+# =====================================================================
+#  Filename:    utils.py
+#
+#  py Ver:      python 3.6 or later
+#
+#  Description: Utility functions for the object detection script(s)
+#
+#  Note: Requires opencv 3.4.2 or later
+#
+#  Author: Ankit Saxena (ankch24@gmail.com)
+# =====================================================================
+
 import cv2
 import time
 
