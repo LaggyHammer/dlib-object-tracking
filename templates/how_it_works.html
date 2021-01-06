@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+    <title>Dlib-Blink-Detection</title>
+</head>
+
+<body>
+
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container">
+
+        <div class="row">
+            <div class="col-lg-8  offset-lg-2">
+                <h3>Blink detection using facial landmark recognition</h3>
+                <p>
+                    Using dlib's face detector, faces are detected in each frame of a video stream.
+                    Iterating over each detected face, we predict the facial landmarks using a pre-trained predictor.
+                </p>
+                <p>
+                    The landmarks for each eye are isolated & an average aspect ratio for the eyes is calculated.
+                    If this ratio falls below a certain customizable threshold for _'n'_ consecutive frames,
+                    the blink counter is increased.
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+{% endblock %}
+
+
+
+</body>
