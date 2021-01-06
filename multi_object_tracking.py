@@ -193,6 +193,93 @@ def main(classes, proto, model, video, label_input, output, min_confidence):
     vs.release()
 
 
+def web_main(classes, proto, model, video, label_input, output, min_confidence):
+    in_queues = []
+    out_queues = []
+
+    # pre-load detection model
+    print("[INFO] loading detection model...")
+    net = cv2.dnn.readNetFromCaffe(prototxt=proto, caffeModel=model)
+
+    print('[INFO] Starting video stream...')
+
+    # start video stream
+    vs = cv2.VideoCapture(video)
+
+    # main loop
+    while True:
+
+        grabbed, frame = vs.read()
+
+        if frame is None:
+            break
+
+        # resize the frame & convert to RGB color space (dlib needs RGB)
+        frame = imutils.resize(frame, width=600)
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        # if no item in the input queue
+        if len(in_queues) == 0:
+            height, width = frame.shape[:2]
+            # get detections from the model
+            detections = forward_passer(net, frame, timing=False)
+
+            # loop through all detections
+            for i in np.arange(0, detections.shape[2]):
+
+                confidence = detections[0, 0, i, 2]
+
+                if confidence > min_confidence:
+                    index = int(detections[0, 0, i, 1])
+                    label = classes[index]
+
+                    if label != label_input:
+                        continue
+
+                    box = detections[0, 0, i, 3:7] * np.array([width, height, width, height])
+                    bound_box = box.astype('int')
+
+                    # initiate multiprocessing queues
+                    in_q = multiprocessing.Queue()
+                    out_q = multiprocessing.Queue()
+                    in_queues.append(in_q)
+                    out_queues.append(out_q)
+
+                    # initiating daemon process
+                    p = multiprocessing.Process(target=start_tracker,
+                                                args=(bound_box, label, rgb, in_q, out_q))
+                    p.daemon = True
+                    p.start()
+
+                    # draw rectangles around the tracked detections
+                    cv2.rectangle(frame, (bound_box[0], bound_box[1]), (bound_box[2], bound_box[3]), (0, 255, 0), 2)
+                    cv2.putText(frame, label, (bound_box[0], bound_box[1] - 15), cv2.FONT_HERSHEY_SIMPLEX,
+                                0.45, (0, 255, 0), 2)
+
+        # if detections already identified
+        else:
+
+            # push frames
+            for in_q in in_queues:
+                in_q.put(rgb)
+
+            # get labelled boxes
+            for out_q in out_queues:
+                label, label_box = out_q.get()
+
+                # draw rectangles around the tracked detections
+                cv2.rectangle(frame, (label_box[0], label_box[1]), (label_box[2], label_box[3]),
+                              (0, 255, 0), 2)
+                cv2.putText(frame, label, (label_box[0], label_box[1] - 15), cv2.FONT_HERSHEY_SIMPLEX,
+                            0.45, (0, 255, 0), 2)
+
+        # show result
+        ret, jpeg = cv2.imencode('.jpg', frame)
+        frame = jpeg.tobytes()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+
+
 if __name__ == '__main__':
 
     args = get_arguments()
