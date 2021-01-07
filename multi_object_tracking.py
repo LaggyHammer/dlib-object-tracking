@@ -204,7 +204,7 @@ def web_main(classes, proto, model, video, label_input, output, min_confidence):
     print('[INFO] Starting video stream...')
 
     # start video stream
-    vs = cv2.VideoCapture(video)
+    vs = video
 
     # main loop
     while True:

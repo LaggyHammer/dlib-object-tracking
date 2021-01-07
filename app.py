@@ -3,7 +3,8 @@ import cv2
 from multi_object_tracking import web_main
 
 app = Flask(__name__)
-# video = cv2.VideoCapture(0)
+video = cv2.VideoCapture(0)
+label = "person"
 
 # classes that the model can recognize // change according to the model
 CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
@@ -19,6 +20,51 @@ def default():
 
 @app.route('/home/')
 def index():
+    global video
+    global label
+    video = cv2.VideoCapture(r"videos\r6s_k.mp4")
+    label = "person"
+    return render_template('index.html')
+
+
+@app.route('/cat/')
+def cat():
+    global video
+    global label
+    video = cv2.VideoCapture(r"videos\cat.mp4")
+    label = "cat"
+    return render_template('index.html')
+
+
+@app.route('/race/')
+def race():
+    global video
+    global label
+    video = cv2.VideoCapture(r"videos\race.mp4")
+    label = "person"
+    return render_template('index.html')
+
+
+@app.route('/car/')
+def car():
+    global video
+    global label
+    video = cv2.VideoCapture(r"videos\race3.mp4")
+    label = "car"
+    return render_template('index.html')
+
+
+@app.route('/person/')
+def person():
+    return redirect(url_for('index'))
+
+
+@app.route('/live/')
+def live():
+    global video
+    global label
+    video = cv2.VideoCapture(0)
+    label = "person"
     return render_template('index.html')
 
 
@@ -39,10 +85,11 @@ def explain():
 @app.route('/video_feed/')
 def video_feed():
     global video
+    global label
     return Response(web_main(classes=CLASSES, proto=r"model\MobileNetSSD_deploy.prototxt",
                              model=r"model\MobileNetSSD_deploy.caffemodel",
-                             video=r"videos\race3.mp4",
-                             label_input="car", output=None,
+                             video=video,
+                             label_input=label, output=None,
                              min_confidence=0.2),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
