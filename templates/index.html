@@ -18,9 +18,14 @@
     <div class="container">
 
         <div class="row">
-            <div class="col-lg-8  offset-lg-2"><img src="{{ url_for('video_feed') }}" width="100%"></div>
+            <div class="col-lg-8  offset-lg-2"><img style="padding:1px;border:thin solid black;" src="{{ url_for('video_feed') }}" width="100%"></div>
         </div>
 
+        <div class="row">
+            <div class="col-lg-8  offset-lg-2">
+            <button type="button" onclick="window.location.reload();" class="btn btn-primary">Reload Demo</button>
+            </div>
+        </div>
     </div>
 {% endblock %}
 </body>
