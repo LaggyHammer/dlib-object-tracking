@@ -32,33 +32,18 @@
               <li class="nav-item active">
                 <a class="nav-link" href="{{ url_for('index') }}">Home <span class="sr-only">(current)</span></a>
               </li>
-                 <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('car') }}">Car Demo</a>
-              </li>
-                 <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('person') }}">Person Demo</a>
-              </li>
-                 <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('race') }}">Race Demo</a>
-              </li>
-                 <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('cat') }}">Cat Demo</a>
-              </li>
-                 <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('live') }}">Live Person Demo</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('explain') }}">How This Works</a>
-              </li>
+
                  <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          Dropdown
+          Choose a Demo
         </a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-          <a class="dropdown-item" href="#">Action</a>
-          <a class="dropdown-item" href="#">Another action</a>
+          <a class="dropdown-item" href="{{ url_for('person') }}">Person Demo</a>
+          <a class="dropdown-item" href="{{ url_for('car') }}">Car Demo</a>
+          <a class="dropdown-item" href="{{ url_for('cat') }}">Cat Demo</a>
+          <a class="dropdown-item" href="{{ url_for('race') }}">Race Demo</a>
           <div class="dropdown-divider"></div>
-          <a class="dropdown-item" href="#">Something else here</a>
+          <a class="dropdown-item" href="{{ url_for('live') }}">Live Demo (Webcam)</a>
         </div>
       </li>
             </ul>
