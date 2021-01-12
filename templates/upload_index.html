@@ -20,12 +20,29 @@
         <div class="row">
             <div class="col-lg-8  offset-lg-2"><img style="padding:1px;border:thin solid black;" src="{{ url_for('video_feed') }}" width="100%"></div>
         </div>
+<div class="row">
+        <div class="col-lg-8  offset-lg-2">
+        <form method="post" action="/upload/" enctype="multipart/form-data">
+    <dl>
 
+        <div class="input-group mb-3">
+          <input type="file" class="form-control" id="inputGroupFile02" name="file" autocomplete="off" required>
+          <label class="input-group-text" for="inputGroupFile02">Upload</label>
+        </div>
+
+    </dl>
+    <p>
+		<input type="submit" class="btn btn-primary" value="Submit">
+	</p>
+</form>
+</div>
+    </div>
         <div class="row">
             <div class="col-lg-8  offset-lg-2">
             <button type="button" onclick="window.location.reload();" class="btn btn-primary">Reload Demo</button>
             </div>
         </div>
+
     </div>
 {% endblock %}
 </body>

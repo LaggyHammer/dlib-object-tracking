@@ -1,4 +1,5 @@
-from flask import Flask, Response, render_template, redirect, url_for
+import os
+from flask import Flask, Response, render_template, redirect, url_for, flash, request
 import cv2
 from multi_object_tracking import web_main
 
@@ -12,6 +13,16 @@ CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
            "dog", "horse", "motorbike", "person", "pottedplant", "sheep",
            "sofa", "train", "tvmonitor"]
 
+UPLOAD_FOLDER = 'static/uploads/'
+app.secret_key = "secret key"
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+ALLOWED_EXTENSIONS = {'mp4'}
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 @app.route('/')
 def default():
@@ -22,16 +33,16 @@ def default():
 def index():
     global video
     global label
-    video = cv2.VideoCapture(r"videos\r6s_k.mp4")
+    video = cv2.VideoCapture(r"static\videos\r6s_k.mp4")
     label = "person"
-    return render_template('index.html')
+    return render_template('upload_index.html')
 
 
 @app.route('/cat/')
 def cat():
     global video
     global label
-    video = cv2.VideoCapture(r"videos\cat.mp4")
+    video = cv2.VideoCapture(r"static\videos\cat.mp4")
     label = "cat"
     return render_template('index.html')
 
@@ -40,7 +51,7 @@ def cat():
 def race():
     global video
     global label
-    video = cv2.VideoCapture(r"videos\race.mp4")
+    video = cv2.VideoCapture(r"static\videos\race.mp4")
     label = "person"
     return render_template('index.html')
 
@@ -49,14 +60,18 @@ def race():
 def car():
     global video
     global label
-    video = cv2.VideoCapture(r"videos\race3.mp4")
+    video = cv2.VideoCapture(r"static\videos\race3.mp4")
     label = "car"
     return render_template('index.html')
 
 
 @app.route('/person/')
 def person():
-    return redirect(url_for('index'))
+    global video
+    global label
+    video = cv2.VideoCapture(r"static\videos\r6s_k.mp4")
+    label = "person"
+    return render_template('index.html')
 
 
 @app.route('/live/')
@@ -92,6 +107,34 @@ def video_feed():
                              label_input=label, output=None,
                              min_confidence=0.2),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+@app.route('/upload/')
+def upload_form():
+    return render_template('upload_index.html')
+
+
+@app.route('/upload/', methods=['POST'])
+def upload_image():
+    if 'file' not in request.files:
+        flash('No file part')
+        return redirect(request.url)
+    file = request.files['file']
+    if file.filename == '':
+        flash('No video selected for uploading')
+        return redirect(request.url)
+    if file and allowed_file(file.filename):
+        filename = file.filename
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        flash('Video successfully uploaded and displayed')
+        global video
+        global label
+        video = cv2.VideoCapture(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        label = "person"
+        return render_template('index.html')
+    else:
+        flash('Allowed image types are -> mp4')
+        return redirect(request.url)
 
 
 if __name__ == '__main__':
