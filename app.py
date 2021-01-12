@@ -1,5 +1,6 @@
 import os
 from flask import Flask, Response, render_template, redirect, url_for, flash, request
+from werkzeug.exceptions import RequestEntityTooLarge
 import cv2
 from multi_object_tracking import web_main
 
@@ -127,14 +128,20 @@ def upload_image():
         filename = file.filename
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         flash('Video successfully uploaded and displayed')
+        object_type = request.form.get('label')
         global video
         global label
         video = cv2.VideoCapture(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        label = "person"
-        return render_template('index.html')
+        label = object_type
+        return render_template('upload_index.html')
     else:
         flash('Allowed image types are -> mp4')
         return redirect(request.url)
+
+
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    return 'File Too Large', 413
 
 
 if __name__ == '__main__':
