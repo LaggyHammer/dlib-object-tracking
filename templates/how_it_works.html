@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
           integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
 
-    <title>Dlib-Blink-Detection</title>
+    <title>Dlib-Object-Tracking</title>
 </head>
 
 <body>
@@ -23,15 +23,28 @@
 
         <div class="row">
             <div class="col-lg-8  offset-lg-2">
-                <h3>Blink detection using facial landmark recognition</h3>
-                <p>
-                    Using dlib's face detector, faces are detected in each frame of a video stream.
-                    Iterating over each detected face, we predict the facial landmarks using a pre-trained predictor.
+                <h1 class="display-4">Object Detection & Tracking</h1>
+                <p class="lead">
+                    A pre-trained object detection model is used to perform detection on every frame of the video until
+                    an object of the selected category is found. Subsequently a correlation tracker is placed around the
+                    object.
+                </p>
+                <p class="lead">
+                    The correlation tracker used here uses discriminative correlation filters to localize the target,
+                    building upon a Minimum Output Sum of Squared Error (MOSSE) filter. This makes the tracker robust to
+                    variations in lighting, pose & scale.
                 </p>
                 <p>
-                    The landmarks for each eye are isolated & an average aspect ratio for the eyes is calculated.
-                    If this ratio falls below a certain customizable threshold for _'n'_ consecutive frames,
-                    the blink counter is increased.
+                    More information about the tracking algorithm can be found below: <br>
+                    <div class="list-group">
+
+                      <a href="http://blog.dlib.net/2015/02/dlib-1813-released.html"
+                         class="list-group-item list-group-item-action">Object Tracking in OpenCV</a>
+                      <a href="https://www.cs.colostate.edu/~vision/publications/bolme_cvpr10.pdf"
+                         class="list-group-item list-group-item-action">Visual Object Tracking using Adaptive Correlation Filters</a>
+                      <a href="http://www.bmva.org/bmvc/2014/papers/paper038/index.html"
+                         class="list-group-item list-group-item-action">Accurate Scale Estimation for Robust Visual Tracking</a>
+                    </div>
                 </p>
             </div>
         </div>

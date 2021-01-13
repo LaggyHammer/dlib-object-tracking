@@ -4,6 +4,15 @@ Object tracking using a pre-trained object detection model & the dlib correlatio
 The algorithm starts streaming from a video file or a live web-cam feed.
 Object detection through a pre-trained model is performed on the feed till a positive for the input label is found.
 
+The correlation tracker used here uses discriminative correlation filters to localize the target,
+building upon a Minimum Output Sum of Squared Error (MOSSE) filter. This makes the tracker robust to
+variations in lighting, pose & scale.
+
+More information about the tracking algorithm can be found below: <br>
+1. [Object Tracking in OpenCV](http://blog.dlib.net/2015/02/dlib-1813-released.html)
+2. [Visual Object Tracking using Adaptive Correlation Filters](https://www.cs.colostate.edu/~vision/publications/bolme_cvpr10.pdf)
+3. [Accurate Scale Estimation for Robust Visual Tracking](http://www.bmva.org/bmvc/2014/papers/paper038/index.html)
+
 ## Single Object Tracking
 The detection result is taken to be as the single object with the best detection confidence.
 
