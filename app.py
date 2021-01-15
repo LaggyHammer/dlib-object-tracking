@@ -5,7 +5,7 @@ import cv2
 from multi_object_tracking import web_main
 
 app = Flask(__name__)
-video = cv2.VideoCapture(0)
+video = cv2.VideoCapture(r"static\videos\r6s_k.mp4")
 label = "person"
 
 # classes that the model can recognize // change according to the model
